@@ -203,6 +203,7 @@ def cargar_datos(ticker: str, periodo: str) -> pd.DataFrame:
         fecha_inicio = df["Date"].min()
         
     df = df[df["Date"] >= fecha_inicio].copy()
+    df.reset_index(drop=True, inplace=True)
     return df
 
 # ─────────────────────────────────────────────────────────────────────────────
