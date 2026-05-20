@@ -182,15 +182,27 @@ st.markdown("""
 # ─────────────────────────────────────────────────────────────────────────────
 # CARGA DE DATOS (con caché para no repetir petición)
 # ─────────────────────────────────────────────────────────────────────────────
-@st.cache_data(ttl=3600, show_spinner=False)
+@st.cache_data(show_spinner=False)
 def cargar_datos(ticker: str, periodo: str) -> pd.DataFrame:
-    """Descarga datos desde Yahoo Finance y limpia el DataFrame."""
-    raw = yf.download(ticker, period=periodo, auto_adjust=False)
-    if isinstance(raw.columns, pd.MultiIndex):
-        raw.columns = raw.columns.get_level_values(0)
-    df = raw.reset_index()
+    """Carga datos desde el archivo CSV local y filtra por período."""
+    try:
+        df = pd.read_csv("corficolombiana.csv")
+    except Exception as e:
+        return pd.DataFrame()
+        
     df["Date"] = pd.to_datetime(df["Date"])
-    df = df[["Date", "Open", "High", "Low", "Close", "Adj Close", "Volume"]].dropna()
+    
+    ultima_fecha = df["Date"].max()
+    if periodo == "6mo":
+        fecha_inicio = ultima_fecha - pd.DateOffset(months=6)
+    elif periodo == "1y":
+        fecha_inicio = ultima_fecha - pd.DateOffset(years=1)
+    elif periodo == "2y":
+        fecha_inicio = ultima_fecha - pd.DateOffset(years=2)
+    else:
+        fecha_inicio = df["Date"].min()
+        
+    df = df[df["Date"] >= fecha_inicio].copy()
     return df
 
 # ─────────────────────────────────────────────────────────────────────────────
